@@ -6,14 +6,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.StrictMode
-import android.os.StrictMode.ThreadPolicy
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.view.View
 import android.widget.EditText
-import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,10 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.nativeandroidapp.ui.theme.NativeAndroidAppTheme
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.URL
 import java.net.URLEncoder
 import java.util.*
@@ -42,7 +37,7 @@ class MainActivity : ComponentActivity() {
     private var speechRecognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
     private var speechRecognizerIntent: Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
     private lateinit var editText: EditText
-    private lateinit var micButton: ImageView
+    private lateinit var micButton: ImageButton
     private var isListening: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +55,7 @@ class MainActivity : ComponentActivity() {
         editText = findViewById(com.example.nativeandroidapp.R.id.text)
         micButton = findViewById(com.example.nativeandroidapp.R.id.button)
         micButton.setImageResource(R.drawable.ic_btn_speak_now)
+        micButton.setOnClickListener { this.onClickAction() }
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
@@ -94,14 +90,26 @@ class MainActivity : ComponentActivity() {
             }
             override fun onError(i: Int) {
                 println("[LOGS]: ON SPEECH ERROR $i")
+
             }
             override fun onResults(bundle: Bundle) {
                 micButton.setImageResource(R.drawable.ic_btn_speak_now)
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 editText.setText(data!![0])
                 println("[LOGS]: GOT RESULTS ${data!![0]}")
-                // api call to localhost:3000/ with data!![0]
+
             }
+
+            private fun readStream(input: InputStream) {
+                println("** read stream");
+                println(input);
+            }
+
+            private fun writeStream(out: OutputStream) {
+                println("** write stream");
+                println(out);
+            }
+
             override fun onPartialResults(bundle: Bundle) {
                 println("[LOGS]: GOT PARTIAL RESULTS")
             }
@@ -111,7 +119,7 @@ class MainActivity : ComponentActivity() {
         })
     }
 
-    fun onClickAction(view: View): Unit {
+    private fun onClickAction(): Unit {
         println("[LOGS]: I WAS PRESSED! $isListening")
         if (isListening) {
             println("[LOGS]: stopped listening")
