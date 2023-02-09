@@ -97,6 +97,7 @@ class MainActivity : ComponentActivity() {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 editText.setText(data!![0])
                 println("[LOGS]: GOT RESULTS ${data!![0]}")
+                speechRecognizer.startListening(speechRecognizerIntent)
 
             }
 
