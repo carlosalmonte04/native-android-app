@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.work.PeriodicWorkRuestBuilder
 import com.example.nativeandroidapp.ui.theme.NativeAndroidAppTheme
 import org.json.JSONObject
 import java.io.BufferedInputStream
@@ -37,6 +38,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : ComponentActivity() {
@@ -51,6 +53,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val policy = ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
+
+        val myUploadWork = PeriodicWorkRequestBuilder<SaveImageToFileWorker>(
+            1, TimeUnit.HOURS, // repeatInterval (the period cycle)
+            15, TimeUnit.MINUTES) // flexInterval
+            .build()
 
         setContentView(com.example.nativeandroidapp.R.layout.activity_main)
 //        setContent {
@@ -137,7 +144,7 @@ class MainActivity : ComponentActivity() {
             urlConnection.setChunkedStreamingMode(0)
             val os = DataOutputStream(urlConnection.getOutputStream())
             val jsonParam = JSONObject()
-            jsonParam.put("text", "I want pizza")
+            jsonParam.put("body", jsonParam)
             os.writeBytes(jsonParam.toString());
             os.flush();
             os.close();
