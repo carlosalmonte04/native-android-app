@@ -15,7 +15,7 @@ class SubmitSpeech {
                 urlConnection.setChunkedStreamingMode(0)
                 val os = DataOutputStream(urlConnection.getOutputStream())
                 val jsonParam = JSONObject()
-                jsonParam.put("body", text)
+                jsonParam.put("text", text)
                 os.writeBytes(jsonParam.toString())
                 os.flush();
                 os.close();

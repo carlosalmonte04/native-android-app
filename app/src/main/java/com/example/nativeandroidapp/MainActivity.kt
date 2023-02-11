@@ -42,26 +42,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var editText: EditText
     private lateinit var micButton: ImageButton
     private var isListening: Boolean = false
+    private var speechManager: SubmitSpeech = SubmitSpeech();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val policy = ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        val saveRequest =
-            PeriodicWorkRequestBuilder<{this.onClickAction()}>(3, TimeUnit.SECONDS)
-                // Additional configuration
-                .build()
-
         setContentView(com.example.nativeandroidapp.R.layout.activity_main)
-//        setContent {
-//            Greeting(
-//                "Brian",
-//                fun(): Unit {
-//                    onClickAction()
-//                }
-//            )
-//        }
 
         editText = findViewById(com.example.nativeandroidapp.R.id.text)
         micButton = findViewById(com.example.nativeandroidapp.R.id.button)
@@ -108,18 +96,7 @@ class MainActivity : ComponentActivity() {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 editText.setText(data!![0])
                 println("[LOGS]: GOT RESULTS ${data!![0]}")
-                val SpeechManager = SubmitSpeech();
-                SpeechManager.submit(data!![0]);
-            }
-
-            private fun readStream(input: InputStream) {
-                println("** read stream");
-                println(input);
-            }
-
-            private fun writeStream(out: OutputStream) {
-                println("** write stream");
-                println(out);
+                speechManager.submit(data!![0]);
             }
 
             override fun onPartialResults(bundle: Bundle) {
