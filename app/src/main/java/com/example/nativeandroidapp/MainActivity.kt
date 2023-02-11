@@ -11,7 +11,6 @@ import android.os.StrictMode.ThreadPolicy
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
@@ -27,18 +26,13 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.work.PeriodicWorkRuestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import com.example.nativeandroidapp.ui.theme.NativeAndroidAppTheme
-import org.json.JSONObject
-import java.io.BufferedInputStream
-import java.io.DataOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : ComponentActivity() {
@@ -54,10 +48,10 @@ class MainActivity : ComponentActivity() {
         val policy = ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        val myUploadWork = PeriodicWorkRequestBuilder<SaveImageToFileWorker>(
-            1, TimeUnit.HOURS, // repeatInterval (the period cycle)
-            15, TimeUnit.MINUTES) // flexInterval
-            .build()
+        val saveRequest =
+            PeriodicWorkRequestBuilder<{this.onClickAction()}>(3, TimeUnit.SECONDS)
+                // Additional configuration
+                .build()
 
         setContentView(com.example.nativeandroidapp.R.layout.activity_main)
 //        setContent {
@@ -114,6 +108,8 @@ class MainActivity : ComponentActivity() {
                 val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 editText.setText(data!![0])
                 println("[LOGS]: GOT RESULTS ${data!![0]}")
+                val SpeechManager = SubmitSpeech();
+                SpeechManager.submit(data!![0]);
             }
 
             private fun readStream(input: InputStream) {
@@ -133,32 +129,6 @@ class MainActivity : ComponentActivity() {
                 println("[LOGS]: ON SPEECH EVENT $i")
             }
         })
-        this.makeRequest()
-    }
-
-    private fun makeRequest() {
-        val url = URL("http://needs_ip:3000/")
-        val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        try {
-            urlConnection.setDoOutput(true)
-            urlConnection.setChunkedStreamingMode(0)
-            val os = DataOutputStream(urlConnection.getOutputStream())
-            val jsonParam = JSONObject()
-            jsonParam.put("body", jsonParam)
-            os.writeBytes(jsonParam.toString());
-            os.flush();
-            os.close();
-
-            Log.i("** STATUS", urlConnection.responseCode.toString())
-            Log.i("** MSG" , urlConnection.responseMessage);
-
-            urlConnection.disconnect();
-
-        } catch(e: java.lang.Exception) {
-            e.printStackTrace();
-        } finally {
-            urlConnection.disconnect()
-        }
     }
 
     private fun onClickAction(): Unit {
