@@ -33,7 +33,7 @@ import java.io.OutputStream
 import java.net.URL
 import java.net.URLEncoder
 import java.util.*
-
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     val RecordAudioRequestCode = 1
@@ -43,6 +43,50 @@ class MainActivity : ComponentActivity() {
     private lateinit var micButton: ImageButton
     private var isListening: Boolean = false
     private var speechManager: SubmitSpeech = SubmitSpeech();
+    private val recognitionListener: RecognitionListener = object : RecognitionListener {
+        override fun onReadyForSpeech(bundle: Bundle) {
+            println("[LOGS]: ON READY FOR SPEECH")
+        }
+
+        override fun onBeginningOfSpeech() {
+            println("[LOGS]: ON BEGINNING OF SPEECH")
+            editText.setText("")
+            editText.setHint("Please record audio...")
+        }
+
+        override fun onRmsChanged(v: Float) {
+            println("[LOGS]: RMS CHANGED $v")
+        }
+
+        override fun onBufferReceived(bytes: ByteArray) {
+            println("[LOGS]: BUFFER RECEIVED $bytes")
+        }
+
+        override fun onEndOfSpeech() {
+            println("[LOGS]: END OF SPEECH")
+        }
+
+        override fun onError(i: Int) {
+            println("[LOGS]: ON SPEECH ERROR $i")
+
+        }
+
+        override fun onResults(bundle: Bundle) {
+            micButton.setImageResource(R.drawable.ic_btn_speak_now)
+            val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+            editText.setText(data!![0])
+            println("[LOGS]: GOT RESULTS ${data!![0]}")
+            sendReq((data!![0]))
+        }
+
+        override fun onPartialResults(bundle: Bundle) {
+            println("[LOGS]: GOT PARTIAL RESULTS")
+        }
+
+        override fun onEvent(i: Int, bundle: Bundle) {
+            println("[LOGS]: ON SPEECH EVENT $i")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,45 +111,8 @@ class MainActivity : ComponentActivity() {
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-
-        speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(bundle: Bundle) {
-                println("[LOGS]: ON READY FOR SPEECH")
-            }
-            override fun onBeginningOfSpeech() {
-                println("[LOGS]: ON BEGINNING OF SPEECH")
-                editText.setText("")
-                editText.setHint("Please record audio...")
-            }
-
-            override fun onRmsChanged(v: Float) {
-                println("[LOGS]: RMS CHANGED $v")
-            }
-            override fun onBufferReceived(bytes: ByteArray) {
-                println("[LOGS]: BUFFER RECEIVED $bytes")
-            }
-            override fun onEndOfSpeech() {
-                println("[LOGS]: END OF SPEECH")
-            }
-            override fun onError(i: Int) {
-                println("[LOGS]: ON SPEECH ERROR $i")
-
-            }
-            override fun onResults(bundle: Bundle) {
-                micButton.setImageResource(R.drawable.ic_btn_speak_now)
-                val data = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                editText.setText(data!![0])
-                println("[LOGS]: GOT RESULTS ${data!![0]}")
-                speechManager.submit(data!![0]);
-            }
-
-            override fun onPartialResults(bundle: Bundle) {
-                println("[LOGS]: GOT PARTIAL RESULTS")
-            }
-            override fun onEvent(i: Int, bundle: Bundle) {
-                println("[LOGS]: ON SPEECH EVENT $i")
-            }
-        })
+        speechRecognizer.setRecognitionListener(recognitionListener)
+        speechManager.submit("I want ramen")
     }
 
     private fun onClickAction(): Unit {
@@ -155,6 +162,7 @@ class MainActivity : ComponentActivity() {
     fun sendReq(text: String) {
         var reqParam = URLEncoder.encode("text", "UTF-8") + "=" + URLEncoder.encode(text, "UTF-8")
         val mURL = URL("http://localhost:3000/")
+        speechManager.submit(text);
     }
 }
 

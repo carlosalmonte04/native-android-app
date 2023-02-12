@@ -2,7 +2,7 @@ package com.example.nativeandroidapp
 
 import android.util.Log
 import org.json.JSONObject
-import java.io.DataOutputStream
+import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -10,13 +10,18 @@ class SubmitSpeech {
     fun submit(text: String) {
             val url = URL("http://192.168.0.12:3000/")
             val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
+            val json = "{\"text\":\"$text\"}"
+            urlConnection.requestMethod = "POST"
+            urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            urlConnection.setRequestProperty("Accept", "application/json");
+
             try {
-                urlConnection.setDoOutput(true)
+                urlConnection.doOutput = true
                 urlConnection.setChunkedStreamingMode(0)
-                val os = DataOutputStream(urlConnection.getOutputStream())
-                val jsonParam = JSONObject()
-                jsonParam.put("text", text)
-                os.writeBytes(jsonParam.toString())
+                val os = urlConnection.outputStream
+                val jsonParam = JSONObject(json)
+
+                os.write(jsonParam.toString().toByteArray())
                 os.flush();
                 os.close();
 
